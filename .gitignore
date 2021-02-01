@@ -1,0 +1,11 @@
+bin/
+.vscode/
+logs/
+vendor/
+
+apic_discovery_agent.yml
+apic_traceability_agent.yml
+.DS_Store
+
+*.pem
+

@@ -1,0 +1,30 @@
+central:
+  url: "https://apicentral.axway.com"
+  organizationID: xxxxxxxxx
+  environment: xxxxxxxx
+  auth:
+    clientID: xxxxxxxx
+    privateKey: ../private_key.pem
+    publicKey: ../public_key.pem
+wso2:
+  # basepath: https://localhost:9443/api/am/publisher/v1
+  basepath: https://gateway.api.cloud.wso2.com/api/am/publisher
+  tokenEndpoint: https://gateway.api.cloud.wso2.com/token
+  username: email_address@org_pin
+  password: xxxxxxxx
+  clientId: xxxxxxxx
+  clientSecret: xxxxxxxx
+  # Scope values can be, "apim:api_view apim:api_create apim:api_delete apim:api_publish apim:subscription_view 
+  # apim:subscription_block apim:external_services_discover apim:threat_protection_policy_create 
+  # apim:threat_protection_policy_manage apim:document_create apim:document_manage apim:mediation_policy_view 
+  # apim:mediation_policy_create apim:mediation_policy_manage apim:client_certificates_view 
+  # apim:client_certificates_add apim:client_certificates_update apim:ep_certificates_view apim:ep_certificates_add 
+  # apim:ep_certificates_update apim:publisher_settings apim:pub_alert_manage apim:shared_scope_manage 
+  # apim:app_import_export apim:api_import_export apim:api_product_import_export"
+  scope: "apim:api_view apim:subscription_view"
+  tag: ampc
+log:
+  level: info
+  format: json
+  output: stdout
+  path: logs
