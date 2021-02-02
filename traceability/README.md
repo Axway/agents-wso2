@@ -1,7 +1,54 @@
 
+# Traceability Agent
+The Traceability Agent sends log information about APIs that have been discovered and published to Amplify Central.
+
+
 # Prerequisite
 1. Golang 
 2. Make
+3. API Central Account
+4. API Platform Organization
+
+
+# Setting Up Amplify Central Access
+
+## Find Organizion ID
+<img src="./../img/org.png" width="600"/>
+
+## Create Service Account
+<img src="./../img/account.png" width="600"/>
+
+Click the `+Service Account` Button
+
+Add a name and public key
+
+Create a Service Account in Central so that the Agents can connect to the Gateway without exposing client credentials
+
+To generate a public key, you can install OpenSSL and run the commands below:
+`openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
+openssl rsa -pubout -in private_key.pem -out public_key.pem`
+
+
+
+
+# Docker
+
+## Install
+Install WS02 Docker container
+
+`docker run -it -p 8280:8280 -p 8243:8243 -p 9443:9443 --name api-manager wso2/wso2am:3.2.0`
+
+## Running Contianer
+` https://localhost:9443/publisher `
+
+
+# Publish API
+Create a basic Pizza API
+`https://apim.docs.wso2.com/en/latest/learn/design-api/create-api/create-a-rest-api/`
+
+
+
+
 
 # Steps to implement traceability agent using this stub
 1. Locate the commented tag "CHANGE_HERE" for package import paths in all files and fix them to reference the path correctly.

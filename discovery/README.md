@@ -1,24 +1,120 @@
 
+# Discovery Agent
+The Discovery Agent is used to discover new published APIs. The Discovery Agent pushes both REST and SOAP API definitions to Amplify Central.
+
+If the Discovery Agent discovers an API where the inbound security is not set to PassThrough / API Key / OAuth, the correlating catalog asset will not be created. Discovered APIs that do not have the correct inbound security will only be available in the environment.
+
+The related APIs are published to Amplify Central either as an API Service in environment or an API Service in environment and optionally as Catalog item (default behavior).
+
+
+
 # Prerequisite
 1. Golang 
 2. Make
+3. API Central Account
+4. API Platform Organization
 
-# Steps to implement discovery agent using this stub
-1. Locate the commented tag "CHANGE_HERE" for package import paths in all files and fix them to reference the path correctly.
-2. Run "make dep" to resolve the dependencies. This should resolve all dependency packages and vendor them under ./vendor directory
-3. Update Makefile to change the name of generated binary image from *apic_discovery_agent* to the desired name. Locate *apic_discovery_agent* string and replace with desired name
-4. Update pkg/cmd/root.go to change the name and description of the agent. Locate *apic_discovery_agent* and *Sample Discovery Agent* and replace to desired values
-5. Update pkg/config/config.go to define the gateway specific configuration
-    - Locate *gateway-section* and replace with the name of your gateway. Same string in pkg/cmd/root.go and sample YAML config file
-    - Define gateway specific config properties in *GatewayConfig* struct. Locate the struct variables *ConfigKey1* & struct *config_key_1* and add/replace desired config properties
-    - Add config validation. Locate *ValidateCfg()* method and update the implementation to add validation specific to gateway specific config.
-    - Update the config binding with command line flags in init(). Locate *gateway-section.config_key_1* and add replace desired config property bindings
-    - Update the initialization of gateway specific by parsing the binded properties. Locate *ConfigKey1* & *gateway-section.config_key_1* and add/replace desired config properties
-6. Update pkg/gateway/client.go to implement the logic to discover and fetch the details related of the APIs.
-    - Locate *DiscoverAPIs()* method and implement the logic
-    - Locate *buildServiceBody()* method and update the Set*() method according to the API definition from gateway
-7. Run "make build" to build the agent
-8. Rename *apic_discovery_agent.yaml* file to the desired agents name and setup the agent config in the file.
-9. Execute the agent by running the binary file generated under *bin* directory. The YAML config must be in the current working directory 
+
+# Setting Up Amplify Central Access
+
+## Find Organizion ID
+<img src="./../img/org.png" width="600"/>
+
+## Create Service Account
+<img src="./../img/account.png" width="600"/>
+
+Click the `+Service Account` Button
+
+Add a name and public key
+
+Create a Service Account in Central so that the Agents can connect to the Gateway without exposing client credentials
+
+To generate a public key, you can install OpenSSL and run the commands below:
+`openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
+openssl rsa -pubout -in private_key.pem -out public_key.pem`
+
+Note the clientID for later
+
+## Create Environment
+<img src="./../img/env.png" width="600"/>
+
+Under the Topology tab click the `+Environment` button then fill out the form. Take note of the ID (Logical Name) that is created.
+
+
+# Docker
+
+## Install
+Install WS02 Docker container
+
+`docker run -it -p 8280:8280 -p 8243:8243 -p 9443:9443 --name api-manager wso2/wso2am:3.2.0`
+
+## Running Contianer
+` https://localhost:9443/publisher `
+
+
+# Publish API
+Create a basic Pizza API
+`https://apim.docs.wso2.com/en/latest/learn/design-api/create-api/create-a-rest-api/`
+
+# Setup WS02 Auth
+https://apim.docs.wso2.com/en/latest/develop/product-apis/publisher-apis/publisher-v1/publisher-v1/
+
+Setting up Postman can make this easier. Following Postman collection provides quickstart guide for WSO2 API Manager REST APIs
+https://apim.docs.wso2.com/en/latest/develop/product-apis/overview/
+
+```
+
+After you run the Register DCR App you should get something like below. You then will use the ClientId and clientSecret to populate the YML file.
+{
+"clientId": "fOCi4vNJ59PpHucC2CAYfYuADdMa",
+"clientName": "rest_api_publisher",
+"callBackURL": "www.google.lk",
+"clientSecret": "a4FwHlq0iCIKVs2MPIIDnepZnYMa",
+"isSaasApplication": true,
+"appOwner": "admin",
+"jsonString": "{\"grant_types\":\"client_credentials password refresh_token\",\"redirect_uris\":\"www.google.lk\",\"client_name\":\"rest_api123\"}",
+"jsonAppAttribute": "{}",
+"tokenType": null
+}
+```
+
+# Setup YML file
+Duplicate the sample apic discovery agent. Then change the organizationID, environment, clietID, username, password, clientID, clientSecret, basepath, tokenEndpoint, private and public key path. 
+
+```
+  organizationID: [Located in Amplify Central Organization ]
+  environment: [Located in Amplify Central topographical]
+  auth:
+    clientID: [Located in the Amplify Central Access/Service Accounts]
+    privateKey: [Private Key path you used to create the Access/Service Accounts]
+    publicKey: [Public Key path you used to create the Access/Service Accounts]
+wso2:
+//for docker localhost
+  basepath: https://localhost:9443/api/am/publisher/v1
+  tokenEndpoint: https://localhost:8243/token
+  username: [Default WS02 admin]
+  password: [Default WS02 admin]
+  clientId: [Generated clientID]
+  clientSecret: [Generated secret]
+
+  tag: [Optional API Limitor default *]
+```
+
+# Tag
+If you want to limit the API's that you bring into Amplify Central you can do so with the use of a tag. In the YML file you will see a node called `tag`. When you add a tag here it will limit discovery of to only those API's that use that tag. (optional) default would be *
+
+# Make Build
+from the discovery folder run the build
+`make build`
+
+## Run the agent
+from the root discovery folder run:
+` ./bin/apic_discovery_agent`
+This will allow your apis to be seen in API Central
+
+
+
+# Trouble shooting
+CORS errors when calling domains cross domain in browser from central.
 
 Reference: [SDK Documentation - Building Discovery Agent](https://github.com/Axway/agent-sdk/blob/main/docs/discovery/index.md)
