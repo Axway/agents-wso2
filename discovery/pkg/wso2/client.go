@@ -176,9 +176,13 @@ func (c *GatewayClient) getAPISpec(apiID string) ([]byte, error) {
 
 	err = json.Unmarshal(resp.Body, &jsonMap)
 
+	if err != nil {
+		return nil, err
+	}
+
 	b, err := json.Marshal(jsonMap)
 
-	log.Debug("Swagger : " + string(b))
+	log.Debugf("Swagger : %s", string(b))
 
 	return b, nil
 }
