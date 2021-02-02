@@ -48,18 +48,29 @@ func (c *GatewayClient) DiscoverAPIs() error {
 	for _, api := range *searchResults.List {
 		log.Debugf("found: %s", *api.Id)
 		apiDetails, err := c.getAPIDetails(*api.Id)
+		if err != nil {
+			log.Error("Failed to get API details for " + *api.Id)
+			continue
+		}
 
 		swagger, err := c.getAPISpec(*api.Id)
+		if err != nil {
+			log.Error("Failed to get API specs for " + *api.Id)
+			continue
+		}
 
 		serviceBody, err := buildServiceBody(apiDetails, swagger)
 		if err != nil {
-			return err
+			log.Error("Failed to get service body for " + apiDetails.Name)
+			continue
+			//return err
 		}
 		err = agent.PublishAPI(serviceBody)
 		if err != nil {
-			return err
+			log.Error("Failed to publish api " + apiDetails.Name)
+			continue
 		}
-		log.Info("Published API " + serviceBody.APIName + "to AMPLIFY Central")
+		log.Info("Published API " + serviceBody.NameToPush + " to AMPLIFY Central")
 	}
 
 	return err
@@ -173,15 +184,23 @@ func (c *GatewayClient) getAPISpec(apiID string) ([]byte, error) {
 }
 
 func buildServiceBody(api *models.API, swaggerSpec []byte) (apic.ServiceBody, error) {
+
 	return apic.NewServiceBodyBuilder().
 		SetID(*api.Id).
 		SetTitle(api.Name).
 		SetURL("").
-		SetDescription(*api.Description).
+		SetDescription(getDescription(api.Description)).
 		SetAPISpec(swaggerSpec).
 		SetVersion(api.Version).
 		SetAuthPolicy(apic.Passthrough).
-		SetDocumentation([]byte("\"" + *api.Description + "\"")).
+		SetDocumentation([]byte("\"" + getDescription(api.Description) + "\"")).
 		SetResourceType(apic.Oas2).
 		Build()
+}
+
+func getDescription(description *string) string {
+	if description == nil {
+		return ""
+	}
+	return *description
 }
