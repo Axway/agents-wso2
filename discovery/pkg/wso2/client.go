@@ -159,7 +159,7 @@ func (c *GatewayClient) getAPIDetails(apiID string) (*models.API, error) {
 	if err != nil {
 		return nil, err
 	}
-	// apiDetails := &APIDetails{}
+
 	api := &models.API{}
 	json.Unmarshal(resp.Body, &api)
 	return api, nil
