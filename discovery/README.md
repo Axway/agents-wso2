@@ -6,7 +6,7 @@ If the Discovery Agent discovers an API where the inbound security is not set to
 
 The related APIs are published to Amplify Central either as an API Service in environment or an API Service in environment and optionally as Catalog item (default behavior).
 
-
+<img src="./../img/WS02.png" width="600"/>
 
 # Prerequisite
 1. Golang 
