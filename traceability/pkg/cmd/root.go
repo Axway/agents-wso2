@@ -7,8 +7,8 @@ import (
 	libcmd "github.com/elastic/beats/v7/libbeat/cmd"
 	"github.com/elastic/beats/v7/libbeat/cmd/instance"
 
-	"github.com/Axway/agents-wso2/apic_traceability_agent/pkg/beater"
-	"github.com/Axway/agents-wso2/apic_traceability_agent/pkg/config"
+	"github.com/Axway/agents-wso2/traceability/pkg/beater"
+	"github.com/Axway/agents-wso2/traceability/pkg/config"
 )
 
 // RootCmd - Agent root command
