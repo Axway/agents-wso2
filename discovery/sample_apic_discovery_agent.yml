@@ -22,9 +22,8 @@ wso2:
   # apim:ep_certificates_update apim:publisher_settings apim:pub_alert_manage apim:shared_scope_manage 
   # apim:app_import_export apim:api_import_export apim:api_product_import_export"
   scope: "apim:api_view apim:subscription_view"
-  tags:
-    - ampc
-    - pizza
+  # by default all API
+  #tag: ampc
 log:
   level: info
   format: json

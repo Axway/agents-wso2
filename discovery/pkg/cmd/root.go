@@ -28,13 +28,13 @@ func init() {
 	// Get the root command properties and bind the config property in YAML definition
 	rootProps := RootCmd.GetProperties()
 	rootProps.AddStringProperty("wso2.basepath", "https://localhost:9443/api/am/publisher/v1", "WS02 API Manger basepath")
-	rootProps.AddStringProperty("wso2.tokenEndpoint", "", "")
-	rootProps.AddStringProperty("wso2.username", "", "")
-	rootProps.AddStringProperty("wso2.password", "", "")
-	rootProps.AddStringProperty("wso2.clientId", "", "")
-	rootProps.AddStringProperty("wso2.clientSecret", "", "")
-	rootProps.AddStringProperty("wso2.tag", "ampc", "")
-	rootProps.AddStringProperty("wso2.scope", "", "")
+	rootProps.AddStringProperty("wso2.tokenEndpoint", "https://localhost:8243/token", "OAuth token endpoint")
+	rootProps.AddStringProperty("wso2.username", "", "API Manager username")
+	rootProps.AddStringProperty("wso2.password", "", "API Manager user's password")
+	rootProps.AddStringProperty("wso2.clientId", "", "DCR application client ID")
+	rootProps.AddStringProperty("wso2.clientSecret", "", "DCR application client secret")
+	rootProps.AddStringProperty("wso2.tag", "*", "publish APIs that only have this tag defaults to all APIs")
+	rootProps.AddStringProperty("wso2.scope", "apim:api_view", "")
 
 }
 

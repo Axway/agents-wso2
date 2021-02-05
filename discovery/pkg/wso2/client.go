@@ -14,6 +14,7 @@ import (
 	log "github.com/Axway/agent-sdk/pkg/util/log"
 	"github.com/Axway/agents-wso2/discovery/pkg/config"
 	"github.com/Axway/agents-wso2/discovery/pkg/wso2/models"
+	"github.com/sirupsen/logrus"
 )
 
 // NewGatewayClient - builds a new Client using the AgentConfig
@@ -70,7 +71,7 @@ func (c *GatewayClient) DiscoverAPIs() error {
 			log.Error("Failed to publish api " + apiDetails.Name)
 			continue
 		}
-		log.Info("Published API " + serviceBody.NameToPush + " to AMPLIFY Central")
+		log.Infof("Published API '%s' to AMPLIFY Central", serviceBody.NameToPush)
 	}
 
 	return err
@@ -134,7 +135,7 @@ func (c *GatewayClient) callAPI(endpoint string, method string, queryParams map[
 	}
 
 	log.Debugf("Status (%s) : %s", endpoint, strconv.Itoa(response.Code))
-	log.Debugf("Body: %s", string(response.Body))
+	log.Debugf("Response body: %s", string(response.Body))
 
 	return response, nil
 }
@@ -150,6 +151,8 @@ func (c *GatewayClient) findAmplifyAPIs() (*models.APIList, error) {
 	}
 	r := &models.APIList{}
 	json.Unmarshal(resp.Body, &r)
+
+	log.Infof("Found %d API to be published to AMPLIFY Central", len(*r.List))
 	return r, nil
 }
 
@@ -182,7 +185,9 @@ func (c *GatewayClient) getAPISpec(apiID string) ([]byte, error) {
 
 	b, err := json.Marshal(jsonMap)
 
-	log.Debugf("Swagger : %s", string(b))
+	if log.GetLevel() == logrus.DebugLevel {
+		log.Debugf("Swagger JSON : \n%+v", jsonMap)
+	}
 
 	return b, nil
 }
@@ -196,10 +201,28 @@ func buildServiceBody(api *models.API, swaggerSpec []byte) (apic.ServiceBody, er
 		SetDescription(getDescription(api.Description)).
 		SetAPISpec(swaggerSpec).
 		SetVersion(api.Version).
-		SetAuthPolicy(apic.Passthrough).
+		SetAuthPolicy(getAuthPolicy(api)).
 		SetDocumentation([]byte("\"" + getDescription(api.Description) + "\"")).
 		SetResourceType(apic.Oas2).
 		Build()
+}
+
+func getAuthPolicy(api *models.API) string {
+	// WS02 Cloud returns only "apiSecurity"
+	if api.SecurityScheme == nil {
+		return apic.Oauth
+	}
+
+	for _, scheme := range *api.SecurityScheme {
+		switch scheme {
+		case "oauth2":
+			return apic.Oauth
+		case "api_key":
+			return apic.Apikey
+		}
+	}
+
+	return apic.Passthrough
 }
 
 func getDescription(description *string) string {
