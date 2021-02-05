@@ -4,7 +4,7 @@ import (
 	"github.com/hpcloud/tail"
 
 	// CHANGE_HERE - Change the import path(s) below to reference packages correctly
-	"github.com/Axway/agents-wso2/apic_traceability_agent/pkg/config"
+	"github.com/Axway/agents-wso2/traceability/pkg/config"
 )
 
 // LogReader - Represents the Gateway client
