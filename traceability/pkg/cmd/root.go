@@ -38,7 +38,7 @@ func init() {
 
 	// Get the root command properties and bind the config property in YAML definition
 	rootProps := RootCmd.GetProperties()
-	rootProps.AddStringProperty("gateway-section.logFile", "./logs/traffic.log", "Sample log file with traffic event from gateway")
+	rootProps.AddStringProperty("gateway-section.logFile", "", "Sample log file with traffic event from gateway")
 	rootProps.AddBoolProperty("gateway-section.processOnInput", true, "Flag to process received event on input or by output before publishing the event by transport")
 	rootProps.AddStringProperty("gateway-section.restPort", "8080", "Port to listen on for incoming events from gateway")
 	rootProps.AddStringProperty("gateway-section.config_key_1", "", "Sample Config Key 1")

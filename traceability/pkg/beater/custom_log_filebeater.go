@@ -68,8 +68,12 @@ func (bt *customLogBeater) Run(b *beat.Beat) error {
 		return err
 	}
 
-	bt.logReader.Start()
-	go bt.RestReader.Start()
+	if gatewayConfig.LogFile != "" {
+		bt.logReader.Start()
+	}
+	if gatewayConfig.RestPort != "" {
+		go bt.RestReader.Start()
+	}
 
 	for {
 		select {
