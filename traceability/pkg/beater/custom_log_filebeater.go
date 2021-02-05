@@ -9,14 +9,15 @@ import (
 	"github.com/elastic/beats/v7/libbeat/common"
 	"github.com/elastic/beats/v7/libbeat/logp"
 
-	"github.com/Axway/agents-wso2/apic_traceability_agent/pkg/config"
-	"github.com/Axway/agents-wso2/apic_traceability_agent/pkg/gateway"
+	"github.com/Axway/agents-wso2/traceability/pkg/config"
+	"github.com/Axway/agents-wso2/traceability/pkg/gateway"
 )
 
 // customLogBeater configuration.
 type customLogBeater struct {
 	done           chan struct{}
 	logReader      *gateway.LogReader
+	RestReader     *gateway.RestReader
 	eventProcessor *gateway.EventProcessor
 	client         beat.Client
 	eventChannel   chan string
@@ -34,6 +35,7 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 
 	var err error
 	bt.logReader, err = gateway.NewLogReader(gatewayConfig, bt.eventChannel)
+	bt.RestReader, err = gateway.NewRestReader(gatewayConfig, bt.eventChannel)
 	bt.eventProcessor = gateway.NewEventProcessor(gatewayConfig)
 	if err != nil {
 		return nil, err
@@ -67,6 +69,7 @@ func (bt *customLogBeater) Run(b *beat.Beat) error {
 	}
 
 	bt.logReader.Start()
+	go bt.RestReader.Start()
 
 	for {
 		select {
