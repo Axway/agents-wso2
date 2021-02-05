@@ -3,7 +3,6 @@
     <clone>
         <target>
             <sequence>
-                <property name="HEADERS" expression="$trp" scope="default"/>
                 <property name="HTTP_SC" expression="get-property('axis2', 'HTTP_SC')" scope="default"/>
                 <property name="REQUEST_HOST_HEADER" expression="get-property('axis2', 'REQUEST_HOST_HEADER')" scope="default"/>
                 <property name="messageType" scope="axis2" type="STRING" value="application/json"/>
