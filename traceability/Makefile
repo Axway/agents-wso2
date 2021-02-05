@@ -21,7 +21,7 @@ update-sdk:
 
 
 ${WORKSPACE}/apic_traceability_agent: dep
-	@echo "Building discovery agent 🐿"
+	@echo "Building traceability agent 🐿"
 	@export time=`date +%Y%m%d%H%M%S` && \
 	export version=`cat version` && \
 	export commit_id=`git rev-parse --short HEAD` && \
