@@ -6,7 +6,7 @@ If the Discovery Agent discovers an API where the inbound security is not set to
 
 The related APIs are published to Amplify Central either as an API Service in environment or an API Service in environment and optionally as Catalog item (default behavior).
 
-<img src="./../img/WS02.png" width="600"/>
+<img src="https://github.com/Axway/agents-wso2/blob/media/img/WS02.png?raw=true" width="600"/>
 
 # Prerequisite
 1. Golang 
@@ -18,10 +18,10 @@ The related APIs are published to Amplify Central either as an API Service in en
 # Setting Up Amplify Central Access
 
 ## Find Organizion ID
-<img src="./../img/org.png" width="600"/>
+<img src="https://github.com/Axway/agents-wso2/blob/media/img/org.png?raw=true" width="600"/>
 
 ## Create Service Account
-<img src="./../img/account.png" width="600"/>
+<img src="https://github.com/Axway/agents-wso2/blob/media/img/account.png?raw=true" width="600"/>
 
 Click the `+Service Account` Button
 
@@ -36,7 +36,7 @@ openssl rsa -pubout -in private_key.pem -out public_key.pem`
 Note the clientID for later
 
 ## Create Environment
-<img src="./../img/env.png" width="600"/>
+<img src="https://github.com/Axway/agents-wso2/blob/media/img/env.png?raw=true" width="600"/>
 
 Under the Topology tab click the `+Environment` button then fill out the form. Take note of the ID (Logical Name) that is created.
 
