@@ -28,7 +28,7 @@ func NewRestReader(gatewayCfg *config.GatewayConfig, eventChannel chan string) (
 func (r *RestReader) Start() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/trace", r.getTrace).Methods("POST")
-	log.Fatal(http.ListenAndServe(":8080", myRouter))
+	log.Fatal(http.ListenAndServe(":"+r.cfg.RestPort, myRouter))
 }
 
 func (r RestReader) getTrace(w http.ResponseWriter, request *http.Request) {
