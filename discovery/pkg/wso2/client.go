@@ -15,6 +15,7 @@ import (
 	"github.com/Axway/agents-wso2/discovery/pkg/config"
 	"github.com/Axway/agents-wso2/discovery/pkg/wso2/models"
 	"github.com/sirupsen/logrus"
+	"github.com/tidwall/gjson"
 )
 
 // NewGatewayClient - builds a new Client using the AgentConfig
@@ -54,18 +55,12 @@ func (c *GatewayClient) DiscoverAPIs() error {
 			continue
 		}
 
-		swagger, err := c.getAPISpec(*api.Id)
-		if err != nil {
-			log.Error("Failed to get API specs for " + *api.Id)
-			continue
-		}
-
-		serviceBody, err := buildServiceBody(apiDetails, swagger)
+		serviceBody, err := apiDetails.buildServiceBody()
 		if err != nil {
 			log.Error("Failed to get service body for " + apiDetails.Name)
 			continue
-			//return err
 		}
+
 		err = agent.PublishAPI(serviceBody)
 		if err != nil {
 			log.Error("Failed to publish api " + apiDetails.Name)
@@ -156,15 +151,24 @@ func (c *GatewayClient) findAmplifyAPIs() (*models.APIList, error) {
 	return r, nil
 }
 
-func (c *GatewayClient) getAPIDetails(apiID string) (*models.API, error) {
+func (c *GatewayClient) getAPIDetails(apiID string) (*Wso2API, error) {
 	resp, err := c.callAPI(fmt.Sprintf("/apis/%s", apiID), api.GET, nil, nil)
 
 	if err != nil {
 		return nil, err
 	}
 
-	api := &models.API{}
+	api := &Wso2API{}
 	json.Unmarshal(resp.Body, &api)
+
+	spec, err := c.getAPISpec(*api.Id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	api.setSwaggerSpec(spec)
+
 	return api, nil
 }
 
@@ -175,39 +179,36 @@ func (c *GatewayClient) getAPISpec(apiID string) ([]byte, error) {
 		return nil, err
 	}
 
-	var jsonMap map[string]interface{}
-
-	err = json.Unmarshal(resp.Body, &jsonMap)
-
-	if err != nil {
-		return nil, err
-	}
-
-	b, err := json.Marshal(jsonMap)
+	spec := resp.Body
 
 	if log.GetLevel() == logrus.DebugLevel {
-		log.Debugf("Swagger JSON : \n%+v", jsonMap)
+		log.Debugf("Swagger JSON : \n%s", string(spec))
 	}
 
-	return b, nil
+	return spec, nil
 }
 
-func buildServiceBody(api *models.API, swaggerSpec []byte) (apic.ServiceBody, error) {
+func (api *Wso2API) buildServiceBody() (apic.ServiceBody, error) {
 
 	return apic.NewServiceBodyBuilder().
 		SetID(*api.Id).
 		SetTitle(api.Name).
-		SetURL("").
-		SetDescription(getDescription(api.Description)).
-		SetAPISpec(swaggerSpec).
+		SetURL(api.getURL()).
+		SetDescription(api.getDescription()).
+		SetAPISpec(api.swaggerSpec).
 		SetVersion(api.Version).
-		SetAuthPolicy(getAuthPolicy(api)).
-		SetDocumentation([]byte("\"" + getDescription(api.Description) + "\"")).
+		SetAuthPolicy(api.getAuthPolicy()).
+		SetDocumentation(api.getDocumentation()).
 		SetResourceType(apic.Oas2).
 		Build()
 }
 
-func getAuthPolicy(api *models.API) string {
+func (api *Wso2API) getURL() string {
+	// update
+	return ""
+}
+
+func (api *Wso2API) getAuthPolicy() string {
 	// WS02 Cloud returns only "apiSecurity"
 	if api.SecurityScheme == nil {
 		return apic.Oauth
@@ -225,9 +226,21 @@ func getAuthPolicy(api *models.API) string {
 	return apic.Passthrough
 }
 
-func getDescription(description *string) string {
-	if description == nil {
-		return ""
+func (api *Wso2API) getDescription() string {
+	return fmt.Sprintf("\"%s\"", *api.Description)
+}
+
+func (api *Wso2API) getDocumentation() []byte {
+	return []byte(fmt.Sprintf("\"%s\"", *api.Description))
+}
+
+func (api *Wso2API) setSwaggerSpec(spec []byte) {
+	api.swaggerSpec = spec
+
+	if val := gjson.Get(string(spec), "swagger"); val.Exists() {
+		api.swaggerSpecType = apic.Oas2
+	} else {
+		api.swaggerSpecType = apic.Oas3
 	}
-	return *description
+
 }
