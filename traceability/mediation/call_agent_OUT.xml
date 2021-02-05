@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sequence name="callAgentOUT" statistics="enable" trace="enable" xmlns="http://ws.apache.org/ns/synapse">
+    <!-- <script language="js"><![CDATA[var keySet = mc.getPropertyKeySet();
+       var i = 1;
+       var it = keySet.iterator();
+       var log = "\n\r";
+       while(it.hasNext()){
+         var prop = it.next();
+         log += i + ": " + prop + " = " + mc.getProperty(prop)+"\n\r";
+         i++;
+    }
+    mc.getServiceLog().info(log);]]></script> -->
     <clone>
         <target>
             <sequence>
