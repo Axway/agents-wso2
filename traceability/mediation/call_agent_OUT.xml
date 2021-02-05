@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="callAgentOUT" statistics="enable" trace="enable" xmlns="http://ws.apache.org/ns/synapse">
+    <clone>
+        <target>
+            <sequence>
+                <property name="HEADERS" expression="$trp" scope="default"/>
+                <property name="HTTP_SC" expression="get-property('axis2', 'HTTP_SC')" scope="default"/>
+                <property name="REQUEST_HOST_HEADER" expression="get-property('axis2', 'REQUEST_HOST_HEADER')" scope="default"/>
+                <property name="messageType" scope="axis2" type="STRING" value="application/json"/>
+                <property action="remove" name="REST_URL_POSTFIX" scope="axis2"/>
+                <script language="js"><![CDATA[
+var log = "Logging SC "+ mc.getProperty('HEADERS')+ "\n\r";
+mc.getServiceLog().info(log);
+
+mc.setProperty('CONTENT_TYPE', 'application/json');
+var apiName = mc.getProperty('api.ut.api');
+var uri = mc.getProperty('REST_FULL_REQUEST_PATH');
+var method = mc.getProperty('REST_METHOD');
+var inUrl = mc.getProperty('REST_URL_PREFIX');
+var inUrlList = inUrl.split(':');
+var srcHost = inUrlList[1].substring(2);
+var srcPort = inUrlList[2];
+
+var outUrl = mc.getProperty('ENDPOINT_ADDRESS');
+var outUrlList = outUrl.split(':');
+var destHost = outUrlList[1].substring(2);
+var destPort = outUrlList[2];
+
+var statusCode = mc.getProperty('HTTP_SC');
+
+mc.setPayloadJSON({
+    apiName: apiName,
+    inbound: {
+        id: mc.getMessageID().split(':')[2],
+        uri: uri,
+        method: method,
+        srcHost: srcHost,
+        srcPort: srcPort,
+        destHost: destHost,
+        destPort: destPort,
+        statusCode: statusCode,
+        "requestHeaders": {
+            "X-Header-1": "value"
+        },
+        "responseHeaders": {
+            "Content-Type": "application/json",
+            "Content-Length": "1000"
+        },
+        "requestBytes": 0,
+        "responseBytes": 10000
+    },
+    outbound: {
+        id: "0000000001.2",
+        srcHost: destHost,
+        srcPort: 9090,
+        destHost: "somehost",
+        destPort: 443,
+        "uri": "/api/v1/test",
+        method: method,
+        statusCode: statusCode,
+        "requestHeaders": {
+            "X-Header-1": "value"
+        },
+        "responseHeaders": {
+            "Content-Type": "application/json",
+            "Content-Length": "1000"
+        },
+        "requestBytes": 0,
+        "responseBytes": 10000
+    }
+});
+]]></script>
+                <call blocking="true">
+                    <endpoint>
+                        <http method="post" uri-template="http://ampc.ngrok.io/trace">
+                            <suspendOnFailure>
+                                <initialDuration>-1</initialDuration>
+                                <progressionFactor>-1</progressionFactor>
+                                <maximumDuration>0</maximumDuration>
+                            </suspendOnFailure>
+                            <markForSuspension>
+                                <retriesBeforeSuspension>0</retriesBeforeSuspension>
+                            </markForSuspension>
+                        </http>
+                    </endpoint>
+                </call>
+                <drop/>
+            </sequence>
+        </target>
+        <target>
+            <sequence>
+                <send/>
+            </sequence>
+        </target>
+    </clone>
+</sequence>
