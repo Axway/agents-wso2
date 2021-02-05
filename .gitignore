@@ -9,3 +9,5 @@ apic_traceability_agent.yml
 
 *.pem
 
+
+*.code-workspace
