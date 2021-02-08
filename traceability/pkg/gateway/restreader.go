@@ -1,12 +1,13 @@
 package gateway
 
 import (
-	"github.com/gorilla/mux"
 	"io/ioutil"
-	"log"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	// CHANGE_HERE - Change the import path(s) below to reference packages correctly
+	log "github.com/Axway/agent-sdk/pkg/util/log"
 	"github.com/Axway/agents-wso2/traceability/pkg/config"
 )
 
@@ -28,7 +29,7 @@ func NewRestReader(gatewayCfg *config.GatewayConfig, eventChannel chan string) (
 func (r *RestReader) Start() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/trace", r.getTrace).Methods("POST")
-	log.Fatal(http.ListenAndServe(":"+r.cfg.RestPort, myRouter))
+	log.Info(http.ListenAndServe(":"+r.cfg.RestPort, myRouter))
 }
 
 func (r RestReader) getTrace(w http.ResponseWriter, request *http.Request) {
@@ -36,6 +37,8 @@ func (r RestReader) getTrace(w http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
+
+	log.Debugf("trace message: %s", string(body))
 
 	r.eventChannel <- string(body)
 }

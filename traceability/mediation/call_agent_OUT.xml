@@ -33,7 +33,7 @@ var srcPort = inUrlList[2];
 var outUrl = mc.getProperty('ENDPOINT_ADDRESS');
 var outUrlList = outUrl.split(':');
 var destHost = outUrlList[1].substring(2);
-var destPort = outUrlList[2];
+var destPort = outUrlList[2].split('/')[0];
 
 var statusCode = mc.getProperty('HTTP_SC');
 
@@ -61,9 +61,9 @@ mc.setPayloadJSON({
     outbound: {
         id: "0000000001.2",
         srcHost: destHost,
-        srcPort: 9090,
+        srcPort: destPort,
         destHost: "somehost",
-        destPort: 443,
+        destPort: destPort,
         "uri": "/api/v1/test",
         method: method,
         statusCode: statusCode,

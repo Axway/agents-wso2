@@ -9,12 +9,12 @@ type Headers map[string]string
 type GwTransaction struct {
 	ID              string  `json:"id"`
 	SourceHost      string  `json:"srcHost"`
-	SourcePort      int     `json:"srcPort"`
+	SourcePort      int     `json:"srcPort,string"`
 	DesHost         string  `json:"destHost"`
-	DestPort        int     `json:"destPort"`
+	DestPort        int     `json:"destPort,string"`
 	URI             string  `json:"uri"`
 	Method          string  `json:"method"`
-	StatusCode      int     `json:"statusCode"`
+	StatusCode      int     `json:"statusCode,string"`
 	RequestHeaders  Headers `json:"requestHeaders"`
 	ResponseHeaders Headers `json:"responseHeaders"`
 	RequestBytes    int     `json:"requestByte"`
