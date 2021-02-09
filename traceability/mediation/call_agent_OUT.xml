@@ -18,35 +18,36 @@
                 <property name="messageType" scope="axis2" type="STRING" value="application/json"/>
                 <property action="remove" name="REST_URL_POSTFIX" scope="axis2"/>
                 <script language="js"><![CDATA[
-var log = "Logging SC "+ mc.getProperty('HEADERS')+ "\n\r";
-mc.getServiceLog().info(log);
-
 mc.setProperty('CONTENT_TYPE', 'application/json');
 var apiName = mc.getProperty('api.ut.api');
-var uri = mc.getProperty('REST_FULL_REQUEST_PATH');
+var uriIn = mc.getProperty('REST_FULL_REQUEST_PATH');
 var method = mc.getProperty('REST_METHOD');
+var uriOut = mc.getProperty('REST_SUB_REQUEST_PATH');
+
+var inDestHost = mc.getProperty('api.ut.hostName');
+var clientIp = mc.getProperty('clientIp');
 var inUrl = mc.getProperty('REST_URL_PREFIX');
 var inUrlList = inUrl.split(':');
 var srcHost = inUrlList[1].substring(2);
-var srcPort = inUrlList[2];
+var srcPort = "443";
 
 var outUrl = mc.getProperty('ENDPOINT_ADDRESS');
 var outUrlList = outUrl.split(':');
-var destHost = outUrlList[1].substring(2);
-var destPort = outUrlList[2].split('/')[0];
+var outDestHost = outUrlList[1].substring(2).split('/')[0];
+var destPort = "443";
 
 var statusCode = mc.getProperty('HTTP_SC');
 
 mc.setPayloadJSON({
+    traceId: mc.getMessageID().split(':')[2],
     apiName: apiName,
     inbound: {
-        id: mc.getMessageID().split(':')[2],
-        uri: uri,
+        id: mc.getMessageID().split(':')[2]+".1",
+        uri: uriIn,
         method: method,
-        srcHost: srcHost,
-        srcPort: srcPort,
-        destHost: destHost,
-        destPort: destPort,
+        srcHost: clientIp,
+        destHost: inDestHost,
+        destPort: "443",
         statusCode: statusCode,
         "requestHeaders": {
             "X-Header-1": "value"
@@ -59,18 +60,17 @@ mc.setPayloadJSON({
         "responseBytes": 10000
     },
     outbound: {
-        id: "0000000001.2",
-        srcHost: destHost,
-        srcPort: destPort,
-        destHost: "somehost",
+        id: mc.getMessageID().split(':')[2]+".2",
+        srcHost: srcHost,
+        destHost: outDestHost,
         destPort: destPort,
-        "uri": "/api/v1/test",
+        uri: uriOut,
         method: method,
         statusCode: statusCode,
-        "requestHeaders": {
+        requestHeaders: {
             "X-Header-1": "value"
         },
-        "responseHeaders": {
+        responseHeaders: {
             "Content-Type": "application/json",
             "Content-Length": "1000"
         },
@@ -81,7 +81,7 @@ mc.setPayloadJSON({
 ]]></script>
                 <call blocking="true">
                     <endpoint>
-                        <http method="post" uri-template="http://ampc.ngrok.io/trace">
+                        <http method="post" uri-template="https://ampc.ngrok.io/trace">
                             <suspendOnFailure>
                                 <initialDuration>-1</initialDuration>
                                 <progressionFactor>-1</progressionFactor>
