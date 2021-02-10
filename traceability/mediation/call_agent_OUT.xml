@@ -38,9 +38,19 @@ var destPort = "443";
 
 var statusCode = mc.getProperty('HTTP_SC');
 
+var backendLatency = mc.getProperty('backend_latency');
+
+var startTime = mc.getProperty('request.execution.start.time');
+var d = new Date();
+var n = d.getTime();
+var rt = n - startTime;
+var respTime = new java.lang.Integer(rt);
+
 mc.setPayloadJSON({
     traceId: mc.getMessageID().split(':')[2],
     apiName: apiName,
+    respTime: respTime,
+    startTime: startTime,
     inbound: {
         id: mc.getMessageID().split(':')[2]+".1",
         uri: uriIn,
@@ -57,7 +67,8 @@ mc.setPayloadJSON({
             "Content-Length": "1000"
         },
         "requestBytes": 0,
-        "responseBytes": 10000
+        "responseBytes": 10000,
+        backendLatency: respTime
     },
     outbound: {
         id: mc.getMessageID().split(':')[2]+".2",
@@ -75,7 +86,8 @@ mc.setPayloadJSON({
             "Content-Length": "1000"
         },
         "requestBytes": 0,
-        "responseBytes": 10000
+        "responseBytes": 10000,
+        backendLatency: backendLatency
     }
 });
 ]]></script>

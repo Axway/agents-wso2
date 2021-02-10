@@ -38,7 +38,7 @@ func (r RestReader) getTrace(w http.ResponseWriter, request *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	log.Debugf("trace message: %s", string(body))
+	log.Infof("trace message: %s", string(body))
 
 	r.eventChannel <- string(body)
 }

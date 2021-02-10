@@ -3,7 +3,7 @@ module github.com/Axway/agents-wso2/traceability
 go 1.13
 
 require (
-	github.com/Axway/agent-sdk v0.0.19-0.20210128153510-8e0733c08e0a
+	github.com/Axway/agent-sdk v0.0.20-0.20210209205223-76ca0ce0ca10
 	github.com/Shopify/sarama v1.26.4 // indirect
 	github.com/docker/docker v1.13.1 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect

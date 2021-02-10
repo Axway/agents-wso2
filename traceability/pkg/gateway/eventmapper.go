@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/Axway/agent-sdk/pkg/agent"
 	"github.com/Axway/agent-sdk/pkg/transaction"
@@ -18,7 +17,8 @@ type EventMapper struct {
 func (m *EventMapper) processMapping(gatewayTrafficLogEntry GwTrafficLogEntry) ([]*transaction.LogEvent, error) {
 	centralCfg := agent.GetCentralConfig()
 
-	eventTime := time.Now().Unix()
+	// eventTime := time.Now().Unix()
+	eventTime := gatewayTrafficLogEntry.StartTime
 	txID := gatewayTrafficLogEntry.TraceID
 	txEventID := gatewayTrafficLogEntry.InboundTransaction.ID
 	txDetails := gatewayTrafficLogEntry.InboundTransaction
@@ -95,11 +95,12 @@ func (m *EventMapper) createTransactionEvent(eventTime int64, txID string, txDet
 		SetTransactionID(txID).
 		SetID(eventID).
 		SetParentID(parentEventID).
-		SetSource(txDetails.SourceHost + ":" + strconv.Itoa(txDetails.SourcePort)).
-		SetDestination(txDetails.DesHost + ":" + strconv.Itoa(txDetails.DestPort)).
+		SetSource(txDetails.SourceHost).
+		SetDestination(txDetails.DesHost + ":" + txDetails.getDestPortString()).
 		SetDirection(direction).
 		SetStatus(m.getTransactionEventStatus(txDetails.StatusCode)).
 		SetProtocolDetail(httpProtocolDetails).
+		SetDuration(txDetails.BackendLatency).
 		Build()
 }
 
@@ -118,6 +119,7 @@ func (m *EventMapper) createSummaryEvent(eventTime int64, txID string, gatewayTr
 		// If the API is published to Central as unified catalog item/API service, se the Proxy details with the API definition
 		// The Proxy.Name represents the name of the API
 		// The Proxy.ID should be of format "remoteApiId_<ID Of the API on remote gateway>". Use transaction.FormatProxyID(<ID Of the API on remote gateway>) to get the formatted value.
-		SetProxy("unknown", "", 0).
+		SetProxy(transaction.FormatProxyID(gatewayTrafficLogEntry.APIName), gatewayTrafficLogEntry.APIName, 1).
+		SetDuration(gatewayTrafficLogEntry.ResponseTime).
 		Build()
 }
