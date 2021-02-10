@@ -167,7 +167,20 @@ func (c *GatewayClient) getAPIDetails(apiID string) (*Wso2API, error) {
 		return nil, err
 	}
 
-	api.setSwaggerSpec(spec)
+	var jsonSpecMap map[string]interface{}
+
+	err = json.Unmarshal(spec, &jsonSpecMap)
+	if jsonSpecMap["swagger"] != nil {
+		jsonSpecMap["basePath"] = *&api.Context + "/" + *&api.Version
+		// add to config params
+		jsonSpecMap["host"] = "gateway.api.cloud.wso2.com"
+	} else if jsonSpecMap["openapi"] != nil {
+		jsonSpecMap["servers"] = [1]map[string]interface{}{{"url": "gateway.api.cloud.wso2.com" + *&api.Context + "/" + *&api.Version}}
+	}
+
+	b, err := json.Marshal(jsonSpecMap)
+
+	api.setSwaggerSpec(b)
 
 	return api, nil
 }
