@@ -1,20 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sequence name="callAgentOUT" statistics="enable" trace="enable" xmlns="http://ws.apache.org/ns/synapse">
-    <!-- <script language="js"><![CDATA[var keySet = mc.getPropertyKeySet();
-       var i = 1;
-       var it = keySet.iterator();
-       var log = "\n\r";
-       while(it.hasNext()){
-         var prop = it.next();
-         log += i + ": " + prop + " = " + mc.getProperty(prop)+"\n\r";
-         i++;
-    }
-    mc.getServiceLog().info(log);]]></script> -->
     <clone>
         <target>
             <sequence>
                 <property name="HTTP_SC" expression="get-property('axis2', 'HTTP_SC')" scope="default"/>
+                <property name="contentLength" expression="get-property('transport', 'Content-Length')" scope="default"/>
                 <property name="REQUEST_HOST_HEADER" expression="get-property('axis2', 'REQUEST_HOST_HEADER')" scope="default"/>
+                <property name="xTest" expression="get-property('transport', 'X-test')" scope="default"/>
                 <property name="messageType" scope="axis2" type="STRING" value="application/json"/>
                 <property action="remove" name="REST_URL_POSTFIX" scope="axis2"/>
                 <script language="js"><![CDATA[
@@ -46,6 +38,7 @@ var n = d.getTime();
 var rt = n - startTime;
 var respTime = new java.lang.Integer(rt);
 
+
 mc.setPayloadJSON({
     traceId: mc.getMessageID().split(':')[2],
     apiName: apiName,
@@ -60,11 +53,11 @@ mc.setPayloadJSON({
         destPort: "443",
         statusCode: statusCode,
         "requestHeaders": {
-            "X-Header-1": "value"
+            "X-test": mc.getProperty('xTest')
         },
         "responseHeaders": {
             "Content-Type": "application/json",
-            "Content-Length": "1000"
+            "Content-Length": mc.getProperty('contentLength')
         },
         "requestBytes": 0,
         "responseBytes": 10000,
@@ -79,17 +72,18 @@ mc.setPayloadJSON({
         method: method,
         statusCode: statusCode,
         requestHeaders: {
-            "X-Header-1": "value"
+            "X-test": mc.getProperty('xTest')
         },
         responseHeaders: {
             "Content-Type": "application/json",
-            "Content-Length": "1000"
+            "Content-Length": mc.getProperty('contentLength')
         },
         "requestBytes": 0,
         "responseBytes": 10000,
         backendLatency: backendLatency
     }
 });
+
 ]]></script>
                 <call blocking="true">
                     <endpoint>
