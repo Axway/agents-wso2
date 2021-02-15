@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/Axway/agent-sdk/pkg/agent"
 	"github.com/Axway/agent-sdk/pkg/api"
@@ -43,12 +44,38 @@ func NewGatewayClient(cfg *config.AgentConfig) (*GatewayClient, error) {
 	return c, nil
 }
 
+func (c *GatewayClient) Start() {
+	d, _ := time.ParseDuration("10s")
+	ticker := time.NewTicker(d)
+
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			log.Info("checking for tagged APIs")
+			if err := c.DiscoverAPIs(); err != nil {
+				log.Info(err)
+			}
+			ticker.Stop()
+			ticker = time.NewTicker(d)
+		}
+		time.Sleep(1 * time.Second)
+	}
+}
+
 // DiscoverAPIs - Discover and publish APIs to AMPLIFY Central
 func (c *GatewayClient) DiscoverAPIs() error {
+
 	searchResults, err := c.findAmplifyAPIs()
 
 	for _, api := range *searchResults.List {
-		log.Debugf("found: %s", *api.Id)
+		cache := agent.GetAPICache()
+		val, _ := cache.Get(*api.Id)
+		if val != nil {
+			log.Infof("API %s has already been published and will be ignored", *api.Name)
+			continue
+		}
+		log.Infof("Getting details for (API Name:%s)(ID:%s)", *api.Name, *api.Id)
 		apiDetails, err := c.getAPIDetails(*api.Id)
 		if err != nil {
 			log.Error("Failed to get API details for " + *api.Id)
@@ -167,13 +194,26 @@ func (c *GatewayClient) getAPIDetails(apiID string) (*Wso2API, error) {
 		return nil, err
 	}
 
+	// log.Infof("Swagger: %s", string(spec))
+
 	var jsonSpecMap map[string]interface{}
 
 	err = json.Unmarshal(spec, &jsonSpecMap)
+
+	jsonSpecMap["schemes"] = [1]string{"https"}
 	if jsonSpecMap["swagger"] != nil {
-		jsonSpecMap["basePath"] = *&api.Context + "/" + *&api.Version
+		jsonSpecMap["basePath"] = api.Context + "/" + api.Version
+		// jsonSpecMap["basePath"] = ""
 		// add to config params
 		jsonSpecMap["host"] = "gateway.api.cloud.wso2.com"
+		// jsonSpecMap["host"] = ""
+
+		// jsonSpecMap["securityDefinitions"] = map[string]interface{}{"OAuth2": map[string]interface{}{
+		// 	"type":     "oauth2",
+		// 	"flow":     "application",
+		// 	"tokenUrl": "https://gateway.api.cloud.wso2.com/token",
+		// }}
+
 	} else if jsonSpecMap["openapi"] != nil {
 		jsonSpecMap["servers"] = [1]map[string]interface{}{{"url": "gateway.api.cloud.wso2.com" + *&api.Context + "/" + *&api.Version}}
 	}
@@ -205,9 +245,9 @@ func (api *Wso2API) buildServiceBody() (apic.ServiceBody, error) {
 
 	return apic.NewServiceBodyBuilder().
 		SetID(*api.Id).
-		SetTitle(api.Name).
-		SetURL(api.getURL()).
-		SetDescription(api.getDescription()).
+		SetTitle(fmt.Sprintf("%s (%s)", api.Name, api.Version)).
+		// SetURL(api.getURL()).
+		SetDescription(fmt.Sprintf("%s (%s)", api.getDescription(), api.Version)).
 		SetAPISpec(api.swaggerSpec).
 		SetVersion(api.Version).
 		SetAuthPolicy(api.getAuthPolicy()).
@@ -217,8 +257,8 @@ func (api *Wso2API) buildServiceBody() (apic.ServiceBody, error) {
 }
 
 func (api *Wso2API) getURL() string {
-	// update
-	return ""
+
+	return "https://gateway.api.cloud.wso2.com" + api.GetContext() + "/" + api.GetVersion()
 }
 
 func (api *Wso2API) getAuthPolicy() string {
@@ -256,4 +296,27 @@ func (api *Wso2API) setSwaggerSpec(spec []byte) {
 		api.swaggerSpecType = apic.Oas3
 	}
 
+}
+
+// ValidateSubscription -
+func (c *GatewayClient) ValidateSubscription(subscription apic.Subscription) bool {
+	// Add validation here if the processor callbacks needs to be called or ignored
+	return true
+}
+
+func (c *GatewayClient) ProcessSubscribe(subscription apic.Subscription) {
+	allowTracing := subscription.GetPropertyValue("allowTracing")
+	subscriptionID := subscription.GetID()
+	log.Info("process::" + allowTracing + "::" + subscriptionID)
+	// Process subscription provisioning here
+
+	subscription.UpdateState(apic.SubscriptionActive, "in process sub")
+}
+
+func (c *GatewayClient) ProcessUnsubscribe(subscription apic.Subscription) {
+	subscriptionID := subscription.GetID()
+	log.Info("unsub::" + subscriptionID)
+	// Process subscription de-provisioning here
+
+	subscription.UpdateState(apic.SubscriptionUnsubscribed, "in process un sub")
 }

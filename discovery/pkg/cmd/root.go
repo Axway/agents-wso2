@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"github.com/Axway/agent-sdk/pkg/agent"
+	"github.com/Axway/agent-sdk/pkg/apic"
 	corecmd "github.com/Axway/agent-sdk/pkg/cmd"
 	corecfg "github.com/Axway/agent-sdk/pkg/config"
 	"github.com/Axway/agent-sdk/pkg/util/log"
@@ -46,8 +48,22 @@ func run() error {
 		log.Info(err.Error())
 		return err
 	}
-	err = wso2Client.DiscoverAPIs()
+	err = createSubscriptionSchema()
+
+	subscriptionManager := agent.GetCentralClient().GetSubscriptionManager()
+	subscriptionManager.RegisterValidator(wso2Client.ValidateSubscription)
+	subscriptionManager.RegisterProcessor(apic.SubscriptionRejected, wso2Client.ProcessSubscribe)
+	subscriptionManager.RegisterProcessor(apic.SubscriptionUnsubscribeInitiated, wso2Client.ProcessUnsubscribe)
+	subscriptionManager.Start()
+
+	go wso2Client.Start()
 	return err
+}
+
+func createSubscriptionSchema() error {
+	subscriptionSchema := apic.NewSubscriptionSchema(agent.GetCentralConfig().GetEnvironmentName() + apic.SubscriptionSchemaNameSuffix)
+	subscriptionSchema.AddProperty("allowTracing", "string", "Allow tracing", "", true, make([]string, 0))
+	return agent.GetCentralClient().RegisterSubscriptionSchema(subscriptionSchema)
 }
 
 // Callback that agent will call to initialize the config. CentralConfig is parsed by Agent SDK
